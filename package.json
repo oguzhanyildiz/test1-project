@@ -1,0 +1,29 @@
+{
+  "name": "tower-guardian",
+  "version": "1.0.0",
+  "description": "Hybrid roguelite tower defense game with dual combat systems",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/oguzhanyildiz/test1-project.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/oguzhanyildiz/test1-project/issues"
+  },
+  "homepage": "https://github.com/oguzhanyildiz/test1-project#readme",
+  "devDependencies": {
+    "@types/node": "^24.1.0",
+    "typescript": "^5.8.3",
+    "vite": "^7.0.5"
+  }
+}

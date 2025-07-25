@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Main Menu Test - Tower Guardian</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: Arial, sans-serif;
+        }
+        canvas {
+            border: 1px solid #333;
+            background: #1a1a2e;
+        }
+        .info {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: white;
+            background: rgba(0,0,0,0.7);
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="info">
+        <h3>Main Menu Test</h3>
+        <p>Instructions:</p>
+        <ul>
+            <li>Click "Play" to start the game</li>
+            <li>Click "Skill Tree" to open skills</li>
+            <li>Click "Settings" to open settings</li>
+            <li>Use arrow keys to navigate</li>
+            <li>Press Enter to select</li>
+        </ul>
+        <p>Check browser console for state transition logs</p>
+    </div>
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    
+    <script type="module">
+        import { Game } from './src/Game.js';
+        
+        const canvas = document.getElementById('gameCanvas');
+        
+        try {
+            const game = new Game(canvas);
+            game.start();
+            
+            // Add global access for debugging
+            window.game = game;
+            
+            console.log('🎮 Main Menu Test started');
+            console.log('📝 Available debugging commands:');
+            console.log('   game.getDebugInfo() - Get current game state info');
+            console.log('   game.changeState("playing") - Force state change');
+            console.log('   game.changeState("main_menu") - Return to main menu');
+            
+        } catch (error) {
+            console.error('❌ Failed to start game:', error);
+            document.body.innerHTML += '<div style="color: red; text-align: center; padding: 20px;">Failed to start game. Check console for errors.</div>';
+        }
+    </script>
+</body>
+</html>

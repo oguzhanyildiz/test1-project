@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tower Guardian - Click Detection Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            font-family: Arial, sans-serif;
+            color: white;
+        }
+        
+        canvas {
+            border: 2px solid #333;
+            display: block;
+            margin: 20px auto;
+            background: #0f0f23;
+        }
+        
+        #controls {
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        
+        button:hover {
+            background: #45a049;
+        }
+        
+        #debug {
+            text-align: center;
+            font-family: monospace;
+            background: rgba(0,0,0,0.5);
+            padding: 10px;
+            margin: 10px auto;
+            width: 600px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1 style="text-align: center;">🏰 Tower Guardian - Click Detection Test</h1>
+    
+    <div id="controls">
+        <button onclick="spawnTestEnemy()">Spawn Test Enemy</button>
+        <button onclick="clearAllEnemies()">Clear All Enemies</button>
+        <button onclick="toggleDebugMode()">Toggle Debug</button>
+    </div>
+    
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    
+    <div id="debug">
+        <div>Click on enemies to test click detection!</div>
+        <div>Move mouse over enemies to test hover detection!</div>
+        <div id="debugInfo"></div>
+    </div>
+
+    <script type="module">
+        let game;
+        let debugMode = false;
+        let testEnemies = [];
+        
+        async function init() {
+            try {
+                console.log('Loading game modules...');
+                
+                // Import game modules
+                const { Game } = await import('./src/Game.js');
+                const { Enemy } = await import('./src/entities/Enemy.js');
+                const { EntityManager } = await import('./src/entities/EntityManager.js');
+                const { ClickDetection } = await import('./src/core/ClickDetection.js');
+                const { CanvasRenderer } = await import('./src/core/CanvasRenderer.js');
+                
+                console.log('Modules loaded successfully');
+                
+                // Get canvas and create renderer
+                const canvas = document.getElementById('gameCanvas');
+                const ctx = canvas.getContext('2d');
+                const renderer = new CanvasRenderer(canvas, ctx);
+                
+                // Create entity manager and click detection
+                const entityManager = new EntityManager();
+                const clickDetection = new ClickDetection();
+                
+                // Register enemy factory
+                entityManager.registerFactory('enemy', (data) => new Enemy(data), {
+                    initialSize: 5,
+                    maxSize: 20
+                });
+                
+                console.log('Systems initialized');
+                
+                // Create test enemy spawn function
+                window.spawnTestEnemy = () => {
+                    const enemy = entityManager.createEntity('enemy', {
+                        type: 'enemy',
+                        enemyType: 'basic',
+                        x: (Math.random() - 0.5) * 600,
+                        y: (Math.random() - 0.5) * 400,
+                        health: 1,
+                        speed: 100,
+                        damage: 1,
+                        reward: 10,
+                        viewportWidth: 800,
+                        viewportHeight: 600
+                    });
+                    
+                    // Set up click handler
+                    enemy.onClick = (clickable, clickPos) => {
+                        console.log(`✅ CLICKED ENEMY ${enemy.id}!`, clickPos);
+                        updateDebugInfo(`CLICKED: ${enemy.enemyType} at (${clickPos.x.toFixed(1)}, ${clickPos.y.toFixed(1)})`);
+                        
+                        // Remove from click detection and destroy
+                        clickDetection.removeClickable(enemy.id);
+                        enemy.destroy();
+                    };
+                    
+                    enemy.onHover = (clickable, hoverPos) => {
+                        console.log(`🎯 HOVERING ENEMY ${enemy.id}`, hoverPos);
+                        updateDebugInfo(`HOVER: ${enemy.enemyType} at (${hoverPos.x.toFixed(1)}, ${hoverPos.y.toFixed(1)})`);
+                    };
+                    
+                    enemy.onHoverEnd = (clickable) => {
+                        console.log(`👋 HOVER END ${enemy.id}`);
+                        updateDebugInfo('HOVER END');
+                    };
+                    
+                    // Register with click detection
+                    clickDetection.addClickable(enemy);
+                    testEnemies.push(enemy);
+                    
+                    console.log(`👹 Spawned test enemy ${enemy.id} at (${enemy.x}, ${enemy.y})`);
+                    updateDebugInfo(`Spawned: ${enemy.enemyType} at (${enemy.x.toFixed(1)}, ${enemy.y.toFixed(1)})`);
+                };
+                
+                window.clearAllEnemies = () => {
+                    testEnemies.forEach(enemy => {
+                        clickDetection.removeClickable(enemy.id);
+                        enemy.destroy();
+                    });
+                    testEnemies = [];
+                    clickDetection.clearClickables();
+                    console.log('🧹 Cleared all test enemies');
+                    updateDebugInfo('Cleared all enemies');
+                };
+                
+                window.toggleDebugMode = () => {
+                    debugMode = !debugMode;
+                    console.log(`🔍 Debug mode: ${debugMode}`);
+                    updateDebugInfo(`Debug mode: ${debugMode ? 'ON' : 'OFF'}`);
+                };
+                
+                // Set up canvas event handlers
+                canvas.addEventListener('click', (e) => {
+                    const rect = canvas.getBoundingClientRect();
+                    const x = e.clientX - rect.left - canvas.width / 2;
+                    const y = e.clientY - rect.top - canvas.height / 2;
+                    
+                    console.log(`🖱️ Canvas click at screen (${e.clientX - rect.left}, ${e.clientY - rect.top}) -> world (${x}, ${y})`);
+                    
+                    const hit = clickDetection.handleClick({ x, y });
+                    if (!hit) {
+                        updateDebugInfo(`MISS at (${x.toFixed(1)}, ${y.toFixed(1)})`);
+                    }
+                });
+                
+                canvas.addEventListener('mousemove', (e) => {
+                    const rect = canvas.getBoundingClientRect();
+                    const x = e.clientX - rect.left - canvas.width / 2;
+                    const y = e.clientY - rect.top - canvas.height / 2;
+                    
+                    clickDetection.handleHover({ x, y });
+                });
+                
+                // Spawn initial test enemy
+                setTimeout(() => {
+                    spawnTestEnemy();
+                }, 500);
+                
+                // Game loop
+                let lastTime = 0;
+                function gameLoop(currentTime) {
+                    const deltaTime = (currentTime - lastTime) / 1000;
+                    lastTime = currentTime;
+                    
+                    // Update systems
+                    entityManager.update(deltaTime);
+                    clickDetection.update(deltaTime);
+                    
+                    // Synchronize clickable positions
+                    testEnemies.forEach(enemy => {
+                        if (enemy.active) {
+                            clickDetection.updateClickable(enemy.id, enemy.x, enemy.y);
+                        }
+                    });
+                    
+                    // Remove destroyed enemies from our list
+                    testEnemies = testEnemies.filter(enemy => enemy.active);
+                    
+                    // Render
+                    renderer.clear('#0f0f23');
+                    
+                    // Draw coordinate system if debug mode
+                    if (debugMode) {
+                        // Draw axes
+                        renderer.drawLine(-400, 0, 400, 0, { strokeStyle: '#333', lineWidth: 1 });
+                        renderer.drawLine(0, -300, 0, 300, { strokeStyle: '#333', lineWidth: 1 });
+                        
+                        // Draw grid
+                        for (let x = -400; x <= 400; x += 50) {
+                            renderer.drawLine(x, -300, x, 300, { strokeStyle: '#222', lineWidth: 1 });
+                        }
+                        for (let y = -300; y <= 300; y += 50) {
+                            renderer.drawLine(-400, y, 400, y, { strokeStyle: '#222', lineWidth: 1 });
+                        }
+                    }
+                    
+                    // Render entities
+                    entityManager.render(renderer);
+                    
+                    // Render click detection effects
+                    clickDetection.render(renderer);
+                    
+                    // Debug info on screen
+                    if (debugMode) {
+                        const clickDebug = clickDetection.getDebugInfo();
+                        renderer.drawScreenText(`Clickables: ${clickDebug.clickableCount} | Effects: ${clickDebug.effectCount} | Hover: ${clickDebug.hoverCount}`, 10, 30, {
+                            fillStyle: '#FFFFFF',
+                            font: '14px monospace'
+                        });
+                        
+                        renderer.drawScreenText(`Active Enemies: ${testEnemies.length}`, 10, 50, {
+                            fillStyle: '#FFFFFF',
+                            font: '14px monospace'
+                        });
+                    }
+                    
+                    requestAnimationFrame(gameLoop);
+                }
+                
+                requestAnimationFrame(gameLoop);
+                
+                function updateDebugInfo(message) {
+                    const debugInfo = document.getElementById('debugInfo');
+                    debugInfo.innerHTML = `<div style="color: #4CAF50;">${new Date().toLocaleTimeString()}: ${message}</div>` + debugInfo.innerHTML;
+                    
+                    // Keep only last 10 messages
+                    const messages = debugInfo.children;
+                    while (messages.length > 10) {
+                        debugInfo.removeChild(messages[messages.length - 1]);
+                    }
+                }
+                
+                console.log('✅ Click detection test initialized successfully!');
+                updateDebugInfo('Test initialized - try clicking on enemies!');
+                
+            } catch (error) {
+                console.error('❌ Failed to initialize test:', error);
+                document.getElementById('debugInfo').innerHTML = `<div style="color: #FF4444;">Error: ${error.message}</div>`;
+            }
+        }
+        
+        // Initialize when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+    </script>
+</body>
+</html>
