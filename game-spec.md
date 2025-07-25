@@ -95,6 +95,12 @@ A hybrid tower defense and action clicker game where players defend a central to
 - **Visual:** Semi-transparent with shimmer effect
 - **Spawn Rate:** Introduced at wave 15+
 
+#### Super Boss (Titan)
+- **HP:** 500 | **Speed:** Very Slow | **Coins:** 100
+- **Behavior:** Massive HP, special attacks, summons other bosses
+- **Visual:** Huge, menacing design with multiple components
+- **Spawn Rate:** Every 50 waves
+
 ### User Interface
 - **Main Menu:** Play button, Skill Tree access, Settings, Stats
 - **In-Game HUD:** 

@@ -9,3 +9,5 @@ export { Tower } from './Tower.js';
 export type { TowerData, TowerStats } from './Tower.js';
 export { Enemy } from './Enemy.js';
 export type { EnemyData, EnemyStats } from './Enemy.js';
+export { Boss } from './Boss.js';
+export type { BossData } from './Boss.js';

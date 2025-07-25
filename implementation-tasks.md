@@ -165,6 +165,14 @@ This document contains a comprehensive task list for implementing the roguelite 
 - **Stats:** 2 HP, Medium speed, 4 coin value
 - **Deliverable:** Stealth mechanics system
 
+#### ENEMY-8: Implement Super Boss Class
+**Priority:** High | **Phase:** Week 4
+- 500 HP, very slow movement, summons other bosses
+- Include special attack patterns and multiple phases
+- Add unique visual effects and screen presence
+- **Stats:** 500 HP, Very slow speed, 100 coin value
+- **Deliverable:** Super boss enemy with special attacks
+
 ### Wave Management
 
 #### WAVE-1: Create WaveManager Class
